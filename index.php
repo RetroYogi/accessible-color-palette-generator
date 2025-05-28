@@ -1,0 +1,368 @@
+<?php
+/**
+ * Accessible Color Palette Generator
+ * Using modular header and footer components
+ */
+
+// Page-specific configuration
+$page_title = 'Accessible Color Palette Generator v0.6 | Key4 Web Tools and Services';
+$page_description = 'Generate accessible color palettes that meet WCAG AAA and AA standards with optimized versions for light and dark backgrounds';
+
+// Additional CSS files specific to this page
+$additional_css = [
+    'styles.css'
+];
+
+// Additional JS files specific to this page
+$additional_js = [
+    'app.js'
+];
+
+// Footer configuration - enable shortcuts and accessibility links for this page
+$show_shortcuts_accessibility = true;
+
+// Include the header
+include '../header.php';
+?>
+
+    <!-- Page-specific styles -->
+    <style>
+        /* Mobile close button styling */
+        @media (max-width: 768px) {
+            .btn-close {
+                font-size: 1.2rem;
+                padding: 0.5rem;
+                opacity: 0.7;
+            }
+            
+            .btn-close:hover,
+            .btn-close:focus {
+                opacity: 1;
+            }
+        }
+
+        /* History content container */
+        .history-content {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        /* Enhanced mobile history items - more touch-friendly */
+        @media (max-width: 768px) {
+            .history-item {
+                padding: 12px !important;
+                margin-bottom: 12px !important;
+                min-height: 60px !important;
+                border-radius: 8px !important;
+            }
+            
+            .history-item:active {
+                background: #e9ecef !important;
+                transform: scale(0.98) !important;
+            }
+            
+            .history-colors {
+                gap: 6px !important;
+            }
+            
+            .history-color {
+                width: 24px !important;
+                height: 24px !important;
+                border-radius: 4px !important;
+            }
+            
+            .history-info {
+                font-size: 13px !important;
+                margin-top: 8px !important;
+            }
+            
+            .history-info .time {
+                font-size: 14px !important;
+                margin-bottom: 4px !important;
+            }
+            
+            .history-info .settings {
+                font-size: 12px !important;
+            }
+        }
+
+        /* Updated styles for merged harmony and differentiation section */
+        .harmony-info-content {
+            background-color: #e9ecef;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .harmony-type {
+            font-weight: 600;
+            color: #5500AA;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .harmony-description {
+            font-size: 0.875rem;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+
+        .differentiation-controls {
+            background-color: #f8f9fa;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .differentiation-controls .form-check {
+            margin-bottom: 0.5rem;
+        }
+
+        .differentiation-controls .alert {
+            margin-top: auto;
+            margin-bottom: 0;
+        }
+
+        .differentiation-status-active {
+            color: #198754 !important;
+        }
+
+        .differentiation-status-inactive {
+            color: #6c757d !important;
+        }
+
+        .form-check-input:checked {
+            background-color: #5500AA;
+            border-color: #5500AA;
+        }
+
+        .form-check-input:focus {
+            border-color: #5500AA;
+            box-shadow: 0 0 0 0.25rem rgba(85, 0, 170, 0.25);
+        }
+
+        .alert-info {
+            border-left: 4px solid #5500AA;
+        }
+
+        /* Responsive behavior */
+        @media (max-width: 991.98px) {
+            .harmony-info-content {
+                margin-bottom: 1rem;
+                min-height: 80px;
+            }
+            
+            .differentiation-controls {
+                margin-top: 0;
+            }
+        }
+    </style>
+
+    <!-- Loading indicator -->
+    <div class="loading" role="status" aria-live="polite">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Generating palette...</span>
+        </div>
+    </div>
+
+    <!-- History toggle -->
+    <div class="history-toggle" 
+        onclick="toggleHistory()" 
+        role="button" 
+        tabindex="0" 
+        aria-label="Toggle palette history panel"
+        aria-expanded="false"
+        onkeypress="if(event.key==='Enter' || event.key===' ') {event.preventDefault(); toggleHistory();}">
+        History
+    </div>
+
+    <!-- History panel -->
+    <aside class="history-panel" 
+        id="historyPanel" 
+        role="complementary" 
+        aria-label="Palette history"
+        aria-hidden="true">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h6 mb-0">Palette History</h3>
+            <!-- Mobile close button -->
+            <button type="button" 
+                    class="btn-close d-md-none" 
+                    aria-label="Close history panel"
+                    onclick="toggleHistory()"
+                    ontouchend="event.preventDefault(); toggleHistory();"></button>
+        </div>
+        <div id="historyContent" class="history-content">
+            <p class="text-muted small">No palettes generated yet.</p>
+        </div>
+    </aside>
+
+    <main id="main-content" class="container my-4">
+        <!-- Page Header Section -->
+        <header class="row mb-3">
+            <div class="col">
+                <h1 class="h2 text-primary text-magenta mb-2">WCAG Color Palette Generator</h1>
+                <p class="mb-0 small text-muted">Generate accessible color palettes that meet WCAG standards with optimized versions for both light and dark backgrounds.</p>
+            </div>
+        </header>
+
+        <!-- Controls Section -->
+        <section class="row mb-3" aria-label="Palette configuration">
+            <div class="col">
+                <div class="card shadow-sm">
+                    <div class="card-body py-3">
+                        <h2 class="card-title text-secondary mb-2 h6">Palette Configuration</h2>
+                        <div class="row g-2">
+                            <div class="col-md-6 col-lg-2">
+                                <label for="paletteSize" class="form-label small">Palette Size</label>
+                                <select id="paletteSize" class="form-select form-select-sm" aria-describedby="paletteSizeHelp">
+                                    <option value="3">3 Colors</option>
+                                    <option value="5" selected>5 Colors</option>
+                                </select>
+                                <small id="paletteSizeHelp" class="form-text text-muted">Number of colors</small>
+                            </div>
+                            <div class="col-md-6 col-lg-2">
+                                <label for="wcagLevel" class="form-label small">WCAG Level</label>
+                                <select id="wcagLevel" class="form-select form-select-sm" aria-describedby="wcagLevelHelp">
+                                    <option value="AA" selected>AA (4.5:1)</option>
+                                    <option value="AAA">AAA (7:1)</option>
+                                </select>
+                                <small id="wcagLevelHelp" class="form-text text-muted">Min contrast</small>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <label for="harmonyType" class="form-label small">Color Harmony</label>
+                                <select id="harmonyType" class="form-select form-select-sm" aria-describedby="harmonyHelp">
+                                    <option value="complementary">Complementary</option>
+                                    <option value="triadic" selected>Triadic</option>
+                                    <option value="analogous">Analogous</option>
+                                    <option value="monochromatic">Monochromatic</option>
+                                    <option value="tetradic">Tetradic</option>
+                                </select>
+                                <small id="harmonyHelp" class="form-text text-muted">Color relationship</small>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <label for="baseColor" class="form-label small">Base Color</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="color" id="baseColor" class="form-control form-control-color" value="#5500AA" aria-describedby="colorHelp">
+                                    <div class="d-flex align-items-center">
+                                        <div id="baseColorPreview" class="border rounded" style="width: 32px; height: 32px; background-color: #5500AA;" role="img" aria-label="Selected color preview"></div>
+                                        <span id="baseColorValue" class="ms-1 small text-muted" aria-live="polite">#5500AA</span>
+                                    </div>
+                                </div>
+                                <small id="colorHelp" class="form-text text-muted">Choose base color</small>
+                            </div>
+                            <div class="col-lg-2 d-flex align-items-end">
+                                <div class="btn-group w-100" role="group" aria-label="Export options">
+                                    <button class="btn btn-success btn-sm" onclick="exportPalette('css')" aria-label="Export palette as CSS">
+                                        CSS
+                                    </button>
+                                    <button class="btn btn-success btn-sm" onclick="exportPalette('json')" aria-label="Export palette as JSON">
+                                        JSON
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Harmony Information & Advanced Color Differentiation Section -->
+        <section class="row mb-3" aria-label="Color harmony information and differentiation settings">
+            <div class="col">
+                <div class="card shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="row g-3">
+                            <!-- Harmony Information Column -->
+                            <div class="col-lg-4">
+                                <h3 class="card-title text-secondary mb-2 h6">Color Harmony Information</h3>
+                                <div id="harmonyInfo" class="harmony-info-content mt-4" role="region" aria-live="polite">
+                                    <!-- Harmony information will be populated here -->
+                                </div>
+                            </div>
+                            
+                            <!-- Advanced Color Differentiation Column -->
+                            <div class="col-lg-8">
+                                <h3 class="card-title text-secondary mb-2 h6">Advanced Color Differentiation</h3>
+                                <div class="card-body">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="differentiationEnabled" checked aria-describedby="differentiationToggleHelp">
+                                        <label class="form-check-label fw-semibold" for="differentiationEnabled">
+                                            Enable Differentiation
+                                        </label>
+                                    </div>
+                                    
+                                    <small id="differentiationToggleHelp" class="form-text text-muted d-block mb-2">
+                                        Ensures colors are visually distinct while maintaining accessibility.
+                                        <span id="differentiationStatus" class="fw-semibold text-success">Active</span>
+                                    </small>
+                                    
+                                    <div class="alert alert-info py-2" role="region" aria-labelledby="differentiationInfo">
+                                        <h6 id="differentiationInfo" class="alert-heading mb-1 small">💡 About Differentiation</h6>
+                                        <p class="mb-1 small">When enabled, applies harmony-preserving differentiation using strategic lightness distribution 😎, minimal saturation adjustments, and limited hue changes (≤10°) to ensure visual distinction while maintaining color relationships.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Base Palette Section -->
+        <section class="palette-section" aria-label="Base color palette">
+            <div class="palette-header">
+                <div class="d-flex align-items-baseline gap-3">
+                    <h2 class="palette-title mb-0">Base Palette</h2>
+                    <span class="palette-subtitle">Original harmony colors</span>
+                </div>
+            </div>
+            <div id="basePalette" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-3"></div>
+        </section>
+
+        <!-- Optimized Palettes Section -->
+        <section class="palette-section" aria-label="Accessibility optimized palettes">
+            <div class="palette-header">
+                <div class="d-flex align-items-baseline gap-3">
+                    <h2 class="palette-title mb-0">Accessibility Optimized</h2>
+                    <span class="palette-subtitle">Adjusted for optimal contrast</span>
+                </div>
+            </div>
+            <div id="optimizedPalettes" class="row g-3"></div>
+        </section>
+
+    </main>
+
+    <!-- Shortcuts and Accessibility Links Section -->
+    <section class="container mb-4">
+        <div class="row">
+            <div class="col text-center">
+                <p class="mb-0 small">
+                    <a href="#" onclick="showKeyboardShortcuts(); return false;" class="text-decoration-none me-3">Shortcuts</a>
+                    <span class="text-muted">|</span>
+                    <a href="#" onclick="showAccessibilityInfo(); return false;" class="text-decoration-none ms-3">Accessibility</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Copy Notification -->
+    <div id="copyNotification" class="copy-notification" role="status" aria-live="polite">
+        Color copied!
+    </div>
+
+    <!-- Page-specific JavaScript -->
+    <script type="module" src="app.js"></script>
+
+<?php
+// Footer configuration - disable shortcuts and accessibility since they're above
+$show_shortcuts_accessibility = false;
+
+// Include the footer
+include '../footer.php';
+?>
